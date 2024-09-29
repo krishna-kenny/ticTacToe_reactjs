@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function Cell({ value, onCellClick }) {
   return (
@@ -21,22 +21,66 @@ function Cell({ value, onCellClick }) {
 }
 
 export default function Board() {
-  const [board, setBoard] = useState(Array(9).fill("-"));
-  const [player, setPlayer] = useState(1); //1 -> X; 0 -> O
+  const emptyCellValue = ".";
+
+  const [board, setBoard] = useState(Array(9).fill(emptyCellValue));
+  const [player, setPlayer] = useState(1); //1 -> X; 0 -> O;
+  const [turns, setTurns] = useState(0);
+  const [game, setGame] = useState("in play");
+
+  useEffect(() => {
+    let winner = calculateWinner();
+    if (winner !== null) {
+      setGame(`winner is: ${!player ? "X" : "O"}`);
+      return;
+    }
+
+    if (turns === 9) {
+      setGame("draw");
+    }
+  }, [board]);
 
   function handleClick(pos) {
-    if (board[pos] !== "-") {
+    if (board[pos] !== emptyCellValue || game !== "in play") {
       return;
     }
     const newBoard = board.slice();
     newBoard[pos] = player ? "X" : "O";
+    setTurns(turns + 1);
     setPlayer(!player);
     setBoard(newBoard);
   }
 
   function resetBoard() {
-    setBoard(Array(9).fill("-"));
+    setBoard(Array(9).fill(emptyCellValue));
     setPlayer(1);
+    setTurns(0);
+    setGame("in play");
+  }
+
+  function calculateWinner() {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+
+    for (let i = 0; i < lines.length; i++) {
+      const [a, b, c] = lines[i];
+      if (
+        board[a] === board[b] &&
+        board[b] === board[c] &&
+        board[a] !== emptyCellValue
+      ) {
+        return !player;
+      }
+    }
+    return null;
   }
 
   return (
@@ -72,6 +116,9 @@ export default function Board() {
           <Cell value={board[8]} onCellClick={() => handleClick(8)} />
         </div>
       </div>
+
+      <div style={{ height: "50px" }}></div>
+      <div>{game}</div>
     </div>
   );
 }
